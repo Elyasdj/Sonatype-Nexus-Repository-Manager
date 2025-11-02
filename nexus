@@ -1,0 +1,138 @@
+##Install Java
+
+
+sudo hostnamectl set-hostname Nexus_server
+
+sudo yum install java
+
+java -version
+
+sudo -i
+
+
+
+##Install Nexus
+
+
+useradd -M -d /opt/nexus -s /bin/bash -r nexus
+
+echo "nexus ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/nexus
+
+mkdir /opt/nexus
+
+wget https://download.sonatype.com/nexus/3/nexus-3.85.0-03-linux-x86_64.tar.gz
+
+tar -xzf nexus-3.85.0-03-linux-x86_64.tar.gz -C /opt/nexus --strip-components=1
+
+chown -R nexus:nexus /opt/nexus
+
+vim /opt/nexus/bin/nexus.vmoptions
+
+sudo -u nexus sh -c "cd /opt/nexus && ./bin/nexus start"
+
+tail -f /opt/nexus/sonatype-work/nexus3/log/nexus.log
+
+ss -tunpla | grep 8081
+
+firewall-cmd --add-port=8081/tcp --permanent
+
+firewall-cmd --reload
+
+# check http://your-ip:8081 
+
+/opt/nexus/bin/nexus stop
+
+
+
+##Create a Systemd Service File for Nexus
+
+
+vim /usr/lib/systemd/system/nexus.service
+
+systemctl daemon-reload
+
+systemctl enable --now nexus
+
+systemctl status --now nexus
+
+
+
+##Configure Nginx as a Reverse Proxy for Nexus
+
+
+sudo dnf install nginx -y
+
+sudo vim /etc/nginx/conf.d/nexus.conf
+
+nginx -t
+
+systemctl restart nginx
+
+systemctl enable --now nginx
+
+systemctl status nginx.service
+
+cat /opt/nexus/sonatype-work/nexus3/admin.password
+
+
+
+##Security & Hardening
+
+
+sudo mkdir -p /etc/nginx/ssl
+
+cd /etc/nginx/ssl
+
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/nginx/ssl/nexus.key \
+  -out /etc/nginx/ssl/nexus.crt
+
+chmod 600 /etc/nginx/ssl/nexus.*
+
+chown root:root /etc/nginx/ssl/nexus.*
+
+
+
+##Tshoot
+
+
+tail -f /var/log/nginx/error.log
+
+**RH : if SElinux is enable, turn it off
+
+sudo sestatus
+
+sudo setenforce 0
+
+**after finishing nginx setup 
+
+sudo setenforce 1
+
+**DEB : if AppArmor is enable, turn it off 
+
+sudo vim /etc/apparmor.d/usr.sbin.nginx
+
+add this line=>network inet stream,
+add this line=>network inet6 stream,
+
+sudo apparmor_parser -r /etc/apparmor.d/usr.sbin.nginx
+
+
+
+##Set hosts on offline machine
+
+
+sudo vim /etc/hosts
+
+192.168.560.155 nexus.edj.com
+
+**RH : curl -Ik https://nexus.edj.com
+
+*DEB : curl -I https://nexus.edj.com
+
+
+
+##Create Local Repo
+
+**DEB : 
+
