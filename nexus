@@ -84,8 +84,8 @@ sudo mkdir -p /etc/nginx/ssl
 cd /etc/nginx/ssl
 
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout /etc/nginx/ssl/nexus.key \
-  -out /etc/nginx/ssl/nexus.crt
+  -keyout /etc/nginx/ssl/nexus.edj.com.key \
+  -out /etc/nginx/ssl/nexus.edj.com.crt
 
 chmod 600 /etc/nginx/ssl/nexus.*
 
