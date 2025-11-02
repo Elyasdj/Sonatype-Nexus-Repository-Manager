@@ -134,5 +134,13 @@ sudo vim /etc/hosts
 
 ##Create Local Repo
 
-**DEB : 
+**DEB : Go to your https://nexus.edj.com and follow this path
+settings > repositories > create repository > choose apt(hosted) or apt(proxy)
+
+*tip : what is the different of apt(hosted) and apt(hosted)?
+
+cat /etc/os-release
+
+sudo vim /etc/apt/sources.list.d/ubuntu.sources
+
 
