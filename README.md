@@ -1,295 +1,619 @@
-# 🚀 Sonatype Nexus Repository Manager
+# 📦 Sonatype Nexus Repository Manager - Complete Setup Guide
 
-<div align="center">
-  <img src="./public/nexus-architecture.svg" alt="Nexus Architecture" width="800"/>
-  
-  [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-  [![Nexus Version](https://img.shields.io/badge/nexus-3.85.0--03-orange.svg)](https://www.sonatype.com/products/nexus-repository)
-  [![Java](https://img.shields.io/badge/java-11+-red.svg)](https://openjdk.java.net/)
-</div>
+A comprehensive production-ready guide for installing, configuring, and optimizing Nexus Repository Manager
+
+[![Nexus](https://img.shields.io/badge/Nexus-3.85.0-blue?logo=sonatype)](https://www.sonatype.com/products/nexus-repository)
+[![nginx](https://img.shields.io/badge/nginx-1.26.3-green.svg)](https://nginx.org/download/nginx-1.26.3.tar.gz)
+[![Java](https://img.shields.io/badge/Java-21.0.9-orange?logo=oracle)](https://www.oracle.com/java/)
 
 ---
 
-## 📋 Table of Contents
+## 📑 Table of Contents
 
-- [What is Sonatype Nexus?](#what-is-sonatype-nexus)
-- [Use Cases](#use-cases)
-- [Architecture Overview](#architecture-overview)
-- [Quick Start](#quick-start)
-- [Installation Guide](#installation-guide)
-- [Configuration](#configuration)
-- [Security & Hardening](#security--hardening)
-- [Performance Tuning](#performance-tuning)
-- [Monitoring](#monitoring)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-
----
-
-## 🔍 What is Sonatype Nexus?
-
-**Sonatype Nexus Repository Manager** is a universal artifact repository manager that stores and distributes software components. It acts as a central hub for managing binaries, build artifacts, and dependencies across your entire software development lifecycle.
-
-**Key Features:**
-- 📦 Universal repository support (Maven, npm, Docker, PyPI, apt, yum, etc.)
-- 🔒 Enterprise-grade security and access control
-- 🚄 Intelligent proxy and caching for external repositories
-- 📊 Built-in monitoring and health checks
-- 🔄 High availability and scalability
+- [Introduction](#-introduction)
+- [Architecture](#-architecture)
+- [Prerequisites](#-prerequisites)
+- [Installation & Configuration](#-installation--configuration)
+  - [Install Java](#1-install-java)
+  - [Install Nexus](#2-install-nexus)
+  - [Create Systemd Service](#3-create-systemd-service)
+  - [Configure Nginx](#4-configure-nginx)
+  - [Security & Hardening](#5-security--hardening)
+- [Repository Management](#-repository-management)
+- [Monitoring](#-monitoring)
+- [Performance Tuning](#-performance-tuning)
+- [Troubleshooting](#-troubleshooting)
 
 ---
 
-## 💡 Use Cases
+## 🔍 Introduction
 
-<table>
-<tr>
-<td width="50%">
+### What is Sonatype Nexus?
+A Repository Manager for storing, managing, and distributing software artifacts (packages, libraries, containers).
 
-### 🏢 Enterprise Artifact Management
-Centralize all development artifacts (JARs, WARs, containers) in one secure location with fine-grained access control.
-
-### 🌐 Proxy External Repositories
-Cache dependencies from Maven Central, npm registry, Docker Hub to reduce external bandwidth and improve build speed.
-
-</td>
-<td width="50%">
-
-### 📦 Private Package Distribution
-Host proprietary packages and libraries for internal distribution across development teams.
-
-### 🔄 CI/CD Integration
-Seamless integration with Jenkins, GitLab CI, GitHub Actions for automated artifact publishing and retrieval.
-
-</td>
-</tr>
-</table>
-
----
-
-## 🏗️ Architecture Overview
-
-Our Nexus deployment follows a production-ready architecture:
-
-```
-┌─────────────┐
-│   Internet  │
-└──────┬──────┘
-       │
-┌──────▼──────────────────┐
-│  Nginx Reverse Proxy    │  ← SSL/TLS Termination
-│  (Port 443/8081)        │
-└──────┬──────────────────┘
-       │
-┌──────▼──────────────────┐
-│  Nexus Repository       │  ← Application Layer
-│  (User: nexus)          │
-│  Java 11+               │
-└──────┬──────────────────┘
-       │
-┌──────▼──────────────────┐
-│  File System Storage    │  ← Blob Stores
-│  /opt/nexus/...         │
-└─────────────────────────┘
-```
-
----
-
-## ⚡ Quick Start
-
-```bash
-# Clone the repository
-git clone <YOUR_REPOSITORY_URL>
-cd nexus-setup
-
-# Run the installation script
-sudo bash scripts/install-nexus.sh
-
-# Start Nexus service
-sudo systemctl start nexus
-
-# Check status
-sudo systemctl status nexus
-
-# Access Web UI
-# http://your-server-ip:8081
-```
-
-**Default Credentials:**
-- Username: `admin`
-- Password: Check `/opt/nexus/sonatype-work/nexus3/admin.password`
-
----
-
-## 📥 Installation Guide
-
-### Prerequisites
-- RHEL/CentOS/Rocky Linux 8+ or Ubuntu 20.04+
-- Minimum 4GB RAM (8GB+ recommended)
-- Java 11 or higher
-- 50GB+ disk space
-
-### Step-by-Step Installation
-
-Refer to the following configuration files in this repository:
-
-1. **[Java Installation](docs/01-java-installation.md)**
-2. **[Nexus Installation](docs/02-nexus-installation.md)**
-3. **[Systemd Service Setup](docs/03-systemd-service.md)**
-4. **[Nginx Reverse Proxy](docs/04-nginx-proxy.md)**
-
----
-
-## ⚙️ Configuration
+### Use Cases
+- **Private Repository**: Store and manage organization's internal packages
+- **Proxy Repository**: Cache dependencies from public repositories (Maven Central, npm, Docker Hub)
+- **Group Repository**: Combine multiple repositories into a single endpoint
+- **Artifact Management**: Manage versions and artifact lifecycle
+- **Offline Environment**: Support for air-gapped and offline environments
+- **Multi-Format Support**: Maven, npm, Docker, PyPI, NuGet, APT, YUM, and more
 
 ### Repository Types
 
-| Type | Purpose | Example |
-|------|---------|---------|
-| **hosted** | Store your own artifacts | Internal libraries, Docker images |
-| **proxy** | Cache external repos | Maven Central, npm registry |
-| **group** | Combine multiple repos | Aggregate Maven repos |
-
-### Create Local Repositories
-
-#### For Debian/Ubuntu (apt)
-See: `docs/apt-repository-setup.md`
-
-#### For RHEL/Rocky (yum)
-See: `docs/yum-repository-setup.md`
+| Type | Description |
+|------|-------------|
+| **Hosted** | Store organization's internal artifacts |
+| **Proxy** | Cache artifacts from external sources |
+| **Group** | Combine hosted and proxy repositories |
 
 ---
 
-## 🔐 Security & Hardening
+## 🏗️ Architecture
 
-### SSL/TLS Configuration
+### Our Nexus Structure
+
+<img width="1131" height="1081" alt="Untitled Diagram drawio" src="https://github.com/user-attachments/assets/6867a314-fda6-418a-9890-f8cf19e7c20e" />
+
+---
+
+## ⚙️ Prerequisites
+
+- **OS**: RockyLinux10.0 or Ubuntu 24.04.3
+- **RAM**: Minimum 4GB 
+- **CPU**: Minimum 4 Cores
+
+---
+
+## 🚀 Installation & Configuration
+
+### 1. Install Java
+
 ```bash
-# Generate self-signed certificate
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout /etc/nginx/ssl/nexus.key \
-  -out /etc/nginx/ssl/nexus.crt
+# Set hostname
+sudo hostnamectl set-hostname Nexus_server
+
+# Install Java
+sudo yum install java -y 
+
+# Verify version
+java -version
 ```
 
-### Firewall Rules
+---
+
+### 2. Install Nexus
+
+#### Create nexus User
+
 ```bash
-# RHEL/Rocky
+# Create system user without home directory
+useradd -M -d /opt/nexus -s /bin/bash -r nexus
+
+# Grant sudo access (for administrative operations)
+echo "nexus ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/nexus
+```
+
+#### Download and Install Nexus
+
+```bash
+# Create installation directory
+mkdir /opt/nexus
+
+# Download Nexus
+wget https://download.sonatype.com/nexus/3/nexus-3.85.0-03-linux-x86_64.tar.gz
+
+# Extract files
+tar -xzf nexus-3.85.0-03-linux-x86_64.tar.gz -C /opt/nexus --strip-components=1
+
+# Set file ownership
+chown -R nexus:nexus /opt/nexus
+```
+
+#### Configure JVM and User
+
+```bash
+# JVM memory settings
+vim /opt/nexus/bin/nexus.vmoptions
+# Content in nexus.vmoptions
+
+# Set run user
+vim /opt/nexus/bin/nexus.rc
+# Add: run_as_user="nexus"
+```
+
+#### Manual Startup (Testing)
+
+```bash
+# Start Nexus with nexus user
+sudo -u nexus sh -c "cd /opt/nexus && ./bin/nexus start"
+
+# View logs
+tail -f /opt/nexus/sonatype-work/nexus3/log/nexus.log
+
+# Always check port
+ss -tunpla | grep 8081
+
+# Always open firewall port
 firewall-cmd --add-port=8081/tcp --permanent
 firewall-cmd --reload
-
-# Ubuntu
-ufw allow 8081/tcp
-ufw reload
 ```
 
-### Access Control
-- Enable anonymous access: **Disabled by default**
-- Use LDAP/AD integration for enterprise auth
-- Implement role-based access control (RBAC)
+#### Temporary Access
+`http://your-ip:8081`
 
-Configuration files: `docs/security-hardening.md`
+#### Stop Nexus
+```bash
+/opt/nexus/bin/nexus stop
+```
 
 ---
 
-## 🚀 Performance Tuning
+### 3. Create Systemd Service
 
-### JVM Memory Settings
-```properties
-# /opt/nexus/bin/nexus.vmoptions
--Xms4G
--Xmx4G
--XX:MaxDirectMemorySize=4G
+Create systemd service for automatic Nexus management
+
+```bash
+# Create service file
+vim /usr/lib/systemd/system/nexus.service
+# Content in nexus.service
+
+# Reload systemd
+systemctl daemon-reload
+
+# Enable and start service
+systemctl enable --now nexus
+
+# Always check status
+systemctl status nexus
 ```
-
-**Rule of Thumb:** Allocate 50-60% of total server RAM to Nexus
-
-### Disk I/O Optimization
-- **OS + Nexus binaries:** SSD/NVMe
-- **sonatype-work directory:** Faster SSD/NVMe
-- **Blob stores:** Large capacity SSD/SAN
-
-### Network Tuning
-See: `configs/sysctl.d/99-prod.conf`
-
-### File Handle Limits
-See: `configs/security/limits.conf`
-
-Full tuning guide: `docs/performance-tuning.md`
 
 ---
 
-## 📊 Monitoring
+### 4. Configure Nginx
 
-### Built-in Prometheus Metrics
-Nexus provides native Prometheus integration at:
+Use Nginx as Reverse Proxy with TLS/SSL
+
+#### Install Nginx
+
+```bash
+# Install Nginx
+dnf install nginx -y  
 ```
-http://your-nexus:8081/service/metrics/prometheus
+
+#### Configure Virtual Host
+
+```bash
+# Create configuration file
+vim /etc/nginx/conf.d/nexus.conf
+# Content in nexus.conf
+
+# Test configuration
+nginx -t
+
+# Restart
+systemctl restart nginx
+
+# Enable and start service
+systemctl enable --now nginx
+
+# Always check status
+systemctl status nginx.service
 ```
 
-### Grafana Dashboard
-Import dashboard ID: **16459** (Nexus Dashboard by KL)
+#### Get Initial Admin Password
 
-Configuration: `docs/monitoring-setup.md`
+```bash
+cat /opt/nexus/sonatype-work/nexus3/admin.password
+```
+
+**Note**: This file is deleted after first login.
+
+---
+
+### 5. Security & Hardening
+
+#### Create SSL/TLS Certificate
+
+```bash
+# Create directory
+mkdir -p /etc/nginx/ssl
+cd /etc/nginx/ssl
+
+# Generate self-signed certificate
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/nginx/ssl/nexus.edj.com.key \
+  -out /etc/nginx/ssl/nexus.edj.com.crt
+
+# Set permissions
+chmod 600 /etc/nginx/ssl/nexus.*
+chown root:root /etc/nginx/ssl/nexus.*
+```
+
+**Note**: For production, use Let's Encrypt or a trusted CA.
+
+---
+
+## 📊 Repository Management
+
+### Create Repository
+
+#### APT Repository (Debian/Ubuntu)
+
+```bash
+# Check OS version
+cat /etc/os-release
+
+# Backup original sources
+sudo mv /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources.bak
+
+# Create new sources
+sudo vim /etc/apt/sources.list.d/ubuntu.sources
+# Content in ubuntu.sources
+```
+
+**Path in Nexus UI:**
+```
+Settings > Repositories > Create Repository > apt (proxy)
+```
+
+**Difference between apt(hosted) and apt(proxy):**
+- **apt(hosted)**: For storing your own packages
+- **apt(proxy)**: For caching Ubuntu/Debian packages
+
+#### YUM Repository (RedHat/CentOS)
+
+```bash
+# Check OS version
+cat /etc/os-release
+
+# Create new repo
+sudo vim /etc/yum.repos.d/local.repo
+# Content in local.repo
+```
+
+**Path in Nexus UI:**
+```
+Settings > Repositories > Create Repository > yum (proxy)
+```
+
+---
+
+## 📈 Monitoring
+
+### Prometheus Integration
+
+**Important Note**: No nexus-exporter needed - Nexus has native Prometheus support.
+
+#### Endpoint
+`https://nexus.edj.com/service/rest/metrics/prometheus`
+
+#### Grafana Dashboard
+**Dashboard ID**: `16459` - Infra / Nexus (Nexus Dashboard by KL)
+
+**Official Documentation**: [Sonatype Prometheus Docs](https://help.sonatype.com/en/prometheus.html)
+
+---
+
+## ⚡ Performance Tuning
+
+### Nexus Optimization
+
+#### 1. Change Machine ID
+
+**Why?** Prevent conflicts in cloned environments
+
+```bash
+# Show current Machine ID
+cat /etc/machine-id
+# or
+hostnamectl | grep "Machine ID"
+
+# Generate new Machine ID
+sudo rm -rfv /etc/machine-id
+sudo systemd-machine-id-setup
+```
+
+#### 2. Memory Settings
+
+**Note**: Nexus is RAM and Disk I/O intensive - 90% of performance issues originate here.
+
+##### JVM Settings
+
+```bash
+vim /opt/nexus/bin/nexus.vmoptions
+```
+
+**Recommendations:**
+- Minimum: 4GB RAM + 4 CPU Cores
+- **Never allocate more than 50-60% of total server RAM to Nexus**
+
+##### Disk Isolation
+
+**Best Practice:**
+
+| Disk | Content | Type |
+|------|---------|------|
+| **Disk 1** | OS + Nexus Binary | SSD/NVMe |
+| **Disk 2** | `sonatype-work` Directory | SSD/NVMe (Faster) |
+| **Disk 3** | `Blob Stores` Directory | SSD/SAN (High Capacity) |
+
+---
+
+### OS Tuning
+
+#### 3. Increase File Handles
+
+```bash
+vim /etc/security/limits.conf
+```
+
+Add:
+```
+root    soft   nofile   65536
+root    hard   nofile   65536
+nexus   soft   nofile   65536
+nexus   hard   nofile   65536
+nginx   soft   nofile   65536
+nginx   hard   nofile   65536
+```
+
+**Note**: Ensure nexus and nginx run with appropriate users.
+
+#### 4. Network Tuning
+
+```bash
+vim /etc/sysctl.d/99-prod.conf
+```
+
+Add:
+```bash
+# Increase maximum number of open files system-wide
+fs.file-max = 2097152
+
+# Increase incoming connection queue (for Nginx)
+net.core.somaxconn = 65536
+
+# Fast reuse of sockets in TIME-WAIT mode
+net.ipv4.tcp_tw_reuse = 1
+
+# Increase local port range
+net.ipv4.ip_local_port_range = 1024 65000
+```
+
+Apply changes:
+```bash
+sysctl -p
+```
+
+#### 5. Manage SELinux (RedHat)
+
+**Default Mode**: Enforcing
+
+```bash
+# Disable temporarily
+setenforce 0
+
+# Re-enable after configuration
+setenforce 1
+```
+
+**Note**: For production, define proper policies instead of disabling SELinux.
+
+#### 6. Firewall Management
+
+```bash
+# Open required ports
+firewall-cmd --add-port=8081/tcp --permanent  # Nexus
+firewall-cmd --add-port=443/tcp --permanent   # Nginx HTTPS
+firewall-cmd --reload
+
+# Check rules
+firewall-cmd --list-all
+```
 
 ---
 
 ## 🔧 Troubleshooting
 
-### Common Issues
-
-<details>
-<summary><b>Nexus won't start</b></summary>
+### Check Logs
 
 ```bash
-# Check logs
+# Nexus logs
 tail -f /opt/nexus/sonatype-work/nexus3/log/nexus.log
 
-# Verify Java version
-java -version
-
-# Check disk space
-df -h /opt/nexus
+# Nginx logs
+tail -f /var/log/nginx/error.log
+tail -f /var/log/nginx/access.log
 ```
-</details>
 
-<details>
-<summary><b>502 Bad Gateway (Nginx)</b></summary>
+### SELinux Issues (RedHat)
 
 ```bash
-# Check Nginx logs
-tail -f /var/log/nginx/error.log
+# Check SELinux status
+sestatus
 
-# SELinux issues (RHEL)
-setenforce 0  # Temporary
-# Then properly configure SELinux policies
+# Disable temporarily for testing
+setenforce 0
 
-# Verify Nexus is listening
-ss -tunlp | grep 8081
+# Re-enable
+setenforce 1
 ```
-</details>
 
-<details>
-<summary><b>Out of Memory</b></summary>
+### AppArmor Issues (Debian/Ubuntu)
 
-Increase JVM heap size in `/opt/nexus/bin/nexus.vmoptions`
-```properties
--Xms8G
--Xmx8G
+```bash
+# Edit Nginx profile
+vim /etc/apparmor.d/usr.sbin.nginx
 ```
-</details>
+
+Add:
+```
+network inet stream,
+network inet6 stream,
+```
+
+Apply changes:
+```bash
+sudo apparmor_parser -r /etc/apparmor.d/usr.sbin.nginx
+```
+
+### Test Access in Offline Environment
+
+```bash
+# Configure hosts
+sudo vim /etc/hosts
+```
+
+Add:
+```
+192.168.56.155 nexus.edj.com
+```
+
+Test:
+```bash
+# RedHat
+curl -Ik https://nexus.edj.com
+
+# Debian
+curl -Ik https://nexus.edj.com
+```
+
+### Common Issues
+
+| Issue | Probable Cause | Solution |
+|-------|----------------|----------|
+| Port 8081 not accessible | Firewall or SELinux | Open port in firewall |
+| Nginx 502 Bad Gateway | Nexus not ready | Wait for Nexus to fully start |
+| HTTPS access fails | SSL certificate issue | Check ownership and permissions |
 
 ---
 
-## 📚 Additional Resources
+## ✅ Installation Verification
 
-- [Official Sonatype Documentation](https://help.sonatype.com/repomanager3)
-- [Nexus Community](https://community.sonatype.com/)
-- [Prometheus Metrics Guide](https://help.sonatype.com/en/prometheus.html)
-- [Security Best Practices](https://help.sonatype.com/en/security-best-practices.html)
+### Check Services
 
+```bash
+# Nexus
+systemctl status nexus.service
+ss -tunpla | grep 8081
 
+# Nginx
+systemctl status nginx.service
+ss -tunpla | grep 443
+```
+
+### Test Endpoints
+
+```bash
+# Nexus (direct)
+curl -I http://localhost:8081
+
+# Nexus (via Nginx)
+curl -Ik https://nexus.edj.com
+
+# Metrics (for Prometheus)
+curl -k https://nexus.edj.com/service/metrics/prometheus
+```
+
+### Access Web UI
+
+```
+URL: https://nexus.edj.com
+Username: admin
+Password: [read from admin.password file]
+```
+
+---
+
+## 📄 Configuration Files
+
+### Required Files
+
+| File | Path | Purpose |
+|------|------|---------|
+| `nexus.vmoptions` | `/opt/nexus/bin/` | JVM settings |
+| `nexus.rc` | `/opt/nexus/bin/` | Run user |
+| `nexus.service` | `/usr/lib/systemd/system/` | Systemd unit |
+| `nexus.conf` | `/etc/nginx/conf.d/` | Nginx virtual host |
+| `ubuntu.sources` | `/etc/apt/sources.list.d/` | APT repository (Debian) |
+| `local.repo` | `/etc/yum.repos.d/` | YUM repository (RedHat) |
+| `99-prod.conf` | `/etc/sysctl.d/` | Kernel tuning |
+
+**Note**: Configuration file templates are included in this repository.
+
+---
+
+## 💡 Pro Tips
+
+### Systemd Service File Path
+
+- **Recommended Path**: `/usr/lib/systemd/system/`
+- **Why?**: Using `systemctl mask` on services in `/etc/systemd/system/` can cause issues
+
+### Default Ports
+
+| Service | Port | Protocol |
+|---------|------|----------|
+| Nexus Web UI | 8081 | HTTP |
+| Nginx Proxy | 80/443 | HTTP/HTTPS |
+
+### Blob Store Management
+
+- Each repository can have a separate blob store
+- Blob stores can be moved to separate disks
+- Use File-Based blob stores (S3 for cloud)
+
+---
+
+## 🔐 Security
+
+### Security Checklist
+
+- ✅ Change default `admin` password
+- ✅ Enable HTTPS with valid certificate
+- ✅ Restrict network access (firewall)
+- ✅ Enable authentication for anonymous access
+- ✅ Configure RBAC (Role-Based Access Control)
+- ✅ Enable audit logging
+- ✅ Regular backups of blob stores and database
+- ✅ Keep Nexus updated
+
+### Backup
+
+```bash
+# Important directories
+/opt/nexus/sonatype-work/   # Nexus data
+/opt/nexus/bin/             # Configuration files
+```
+
+**Recommendation**: Use application-level backup:
+```
+Admin Panel > System > Tasks > Create Task > Admin - Export databases for backup
+```
+
+---
+
+## 📚 Useful Resources
+
+- [Sonatype Nexus Documentation](https://help.sonatype.com/repomanager3)
+- [Nexus Repository Manager 3 - Docker](https://hub.docker.com/r/sonatype/nexus3/)
+- [Best Practices Guide](https://help.sonatype.com/repomanager3/planning-your-implementation)
+- [Prometheus Metrics](https://help.sonatype.com/en/prometheus.html)
+
+---
+
+## 📞 Support
+
+For issues and questions:
+- Official Documentation: https://help.sonatype.com
+- Community Forums: https://community.sonatype.com
 
 ---
 
 <div align="center">
-  <sub>Create by Elyasdj</sub>
-  <sub>Guide by Elyasdj</sub>
+  <sub>Created by Elyasdj</sub>
+</div>
+<div align="center">
+  <sub>Guided by Mahdi Sardari</sub>
 </div>
