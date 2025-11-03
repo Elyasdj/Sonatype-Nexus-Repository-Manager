@@ -589,7 +589,7 @@ Password: [read from admin.password file]
 
 **Recommendation**: Use application-level backup:
 ```
-Admin Panel > System > Tasks > Create Task > Admin - Export databases for backup
+Admin Panel > System > Tasks > Create Task > Admin - Backup H2 Database
 ```
 
 ---
@@ -597,7 +597,6 @@ Admin Panel > System > Tasks > Create Task > Admin - Export databases for backup
 ## 📚 Useful Resources
 
 - [Sonatype Nexus Documentation](https://help.sonatype.com/repomanager3)
-- [Nexus Repository Manager 3 - Docker](https://hub.docker.com/r/sonatype/nexus3/)
 - [Best Practices Guide](https://help.sonatype.com/repomanager3/planning-your-implementation)
 - [Prometheus Metrics](https://help.sonatype.com/en/prometheus.html)
 
