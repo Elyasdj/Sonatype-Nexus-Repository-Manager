@@ -1,6 +1,6 @@
 [_baseos]
 name=Local Rocky Linux $releasever - BaseOS
-baseurl=https://nexus.edj.com/repository/Rocky_Linux_10/$contentdir/$releasever/BaseOS/$basearch/os/
+baseurl=https://nexus.edj.com/repository/rocky10/$contentdir/$releasever/BaseOS/$basearch/os/
 gpgcheck=0
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
@@ -8,7 +8,7 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
 
 [_appstream]
 name=Local Rocky Linux $releasever - AppStream
-baseurl=https://nexus.edj.com/repository/Rocky_Linux_10/$contentdir/$releasever/AppStream/$basearch/os/
+baseurl=https://nexus.edj.com/repository/rocky10/$contentdir/$releasever/AppStream/$basearch/os/
 gpgcheck=0
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
@@ -16,7 +16,7 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-10
 
 [epel]
 name=Local Rocky Linux - Epel
-baseurl=https://nexus.edj.com/repository/Rocky_Linux_10/pub/epel/$releasever${releasever_minor:+z}/Everything/$basearch/
+baseurl=https://nexus.edj.com/repository/rocky10/pub/epel/$releasever${releasever_minor:+z}/Everything/$basearch/
 gpgcheck=0
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever_major
