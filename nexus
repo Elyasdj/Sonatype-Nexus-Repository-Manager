@@ -1,3 +1,7 @@
+what is sontype nexus?
+
+use case?
+
 ##Install Java
 
 
@@ -7,7 +11,6 @@ sudo yum install java
 
 java -version
 
-sudo -i
 
 
 
@@ -30,7 +33,7 @@ vim /opt/nexus/bin/nexus.vmoptions
 
 vim /opt/nexus/bin/nexus.rc
 
-sudo -u nexus sh -c "cd /opt/nexus && ./bin/nexus start"
+-u nexus sh -c "cd /opt/nexus && ./bin/nexus start"
 
 tail -f /opt/nexus/sonatype-work/nexus3/log/nexus.log
 
@@ -62,9 +65,9 @@ systemctl status --now nexus
 ##Configure Nginx as a Reverse Proxy for Nexus
 
 
-sudo dnf install nginx -y
+dnf install nginx -y
 
-sudo vim /etc/nginx/conf.d/nexus.conf
+vim /etc/nginx/conf.d/nexus.conf
 
 nginx -t
 
@@ -81,11 +84,11 @@ cat /opt/nexus/sonatype-work/nexus3/admin.password
 ##Security & Hardening
 
 
-sudo mkdir -p /etc/nginx/ssl
+mkdir -p /etc/nginx/ssl
 
 cd /etc/nginx/ssl
 
-sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
   -keyout /etc/nginx/ssl/nexus.edj.com.key \
   -out /etc/nginx/ssl/nexus.edj.com.crt
 
@@ -102,17 +105,17 @@ tail -f /var/log/nginx/error.log
 
 **RH : if SElinux is enable, turn it off
 
-sudo sestatus
+sestatus
 
-sudo setenforce 0
+setenforce 0
 
 **after finishing nginx setup 
 
-sudo setenforce 1
+setenforce 1
 
 **DEB : if AppArmor is enable, turn it off 
 
-sudo vim /etc/apparmor.d/usr.sbin.nginx
+vim /etc/apparmor.d/usr.sbin.nginx
 
 add this line=>network inet stream,
 add this line=>network inet6 stream,
@@ -153,4 +156,12 @@ settings > repositories > create repository > choose yum(proxy)
 cat /etc/os-release
 
 sudo vim /etc/yum.repos.d/local.repo
+
+
+##Nexus Monitoring
+
+
+**we dont need nexus-exporter 
+**sonatype-nexus have already integrated with prometheus Docs: https://help.sonatype.com/en/prometheus.html
+**Grafana Dashboard for Nexus: Infra / Nexus (Nexus Dashboard by KL) -> 16459
 
