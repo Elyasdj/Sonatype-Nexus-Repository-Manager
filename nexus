@@ -117,8 +117,8 @@ setenforce 1
 
 vim /etc/apparmor.d/usr.sbin.nginx
 
-add this line=>network inet stream,
-add this line=>network inet6 stream,
+add this line=> network inet stream,
+add this line=> network inet6 stream,
 
 sudo apparmor_parser -r /etc/apparmor.d/usr.sbin.nginx
 
@@ -165,3 +165,95 @@ sudo vim /etc/yum.repos.d/local.repo
 **sonatype-nexus have already integrated with prometheus Docs: https://help.sonatype.com/en/prometheus.html
 **Grafana Dashboard for Nexus: Infra / Nexus (Nexus Dashboard by KL) -> 16459
 
+
+
+##Tuning Linux Kernel  for Nexus
+
+###Tuning Nexus
+
+1.  Chanage Machine-ID 
+
+Show Machine ID: 
+
+cat /etc/machine-id 
+or 
+hostnamectl | grep "Machine ID"
+
+Change Machine ID:
+
+sudo rm -rfv /etc/machine-id
+sudo systemd-machine-id-setup
+
+2.  Memory setting of Nexus 
+
+*tip: Nexus is a resource-hungry monster, especially RAM and disk I/O. 90% of performance issues come from this.
+
+First : Memory setting (JVM)
+
+vim /opt/nexus/bin/nexus.vmoptions
+
+Limit Memory : 4 GB
+Limit Core : 4 Core
+
+*tip: Never give more than 50% to 60% of the total server RAM to Nexus.
+
+
+Second : Disk isolation (I/O)
+
+Best Practice :
+
+Disk1 (SSD/NVME): rocky + nexus + nexus
+Disk2 (Faster SSD/NVME): "sonatype-work" Directory
+Disk3 (Huge SSD/SAN): "Blob Stores" Directory
+
+###Tuning OS
+
+
+3.  Increasing file limits (File Handles)
+
+vim /etc/security/limits.conf
+
+add these line=> 
+
+root    soft   nofile   65536
+root    hard   nofile   65536
+nexus   soft   nofile   65536
+nexus   hard   nofile   65536
+nginx   soft   nofile   65536
+nginx   hard   nofile   65536
+
+*tip: Make sure that nexus execute with nexus user (nginx too)
+
+4.  Network Tuning
+
+vim /etc/sysctl.d/99-prod.conf
+
+add these line=> 
+
+# Increase the maximum number of open files in the entire system
+fs.file-max = 2097152
+
+# Increase incoming connection queue (for Nginx)
+net.core.somaxconn = 65536
+
+# Fast reuse of sockets in TIME-WAIT mode
+net.ipv4.tcp_tw_reuse = 1
+
+# Increase the local port range
+net.ipv4.ip_local_port_range = 1024 65000
+
+sysctl -p
+
+5.  Manage SELinux (Default Mode: Enforcing)
+
+Turn it off temporary 
+
+setenforce 0
+
+After your done make bakc on
+
+setenforce 1
+
+6.  Firewall (firewalld | ufw)
+
+Make sure that your necessary port is open 
