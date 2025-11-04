@@ -252,6 +252,19 @@ sudo vim /etc/apt/sources.list.d/ubuntu.sources
 # Content in ubuntu.sources
 ```
 
+**If you really must bypass GPG**
+
+```bash
+#Edit your source list
+sudo vim /etc/apt/sources.list.d/ubuntu.sources
+
+#Change
+deb [trusted=yes] https://nexus.edj.com/repository/apt_security_ubuntu24/ noble-security main restricted universe multiverse
+
+#Save and run
+sudo apt update
+```
+
 **Path in Nexus UI:**
 ```
 Settings > Repositories > Create Repository > apt (proxy)
