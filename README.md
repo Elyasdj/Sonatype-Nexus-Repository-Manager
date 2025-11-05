@@ -607,6 +607,17 @@ Admin Panel > System > Tasks > Create Task > Admin - Backup H2 Database
 
 ---
 
+## Upgrade & Downgrade
+
+**Downgrade**: as of the time I'm writing this readme, directly downgrading Sonatype Nexus Repository Manager is not supported by Sonatype. Nexus Repo 3 uses internal databases whose schemas can change between releases, making a direct rollback impossible without data corruption. 
+
+The only surefire way to revert to a previous version is to restore a full backup that you took before updating to newer version.
+
+**Upgrade**: 
+
+
+---
+
 ## 📚 Useful Resources
 
 - [Sonatype Nexus Documentation](https://help.sonatype.com/repomanager3)
