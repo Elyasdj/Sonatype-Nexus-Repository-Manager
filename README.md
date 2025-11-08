@@ -615,6 +615,29 @@ The only surefire way to revert to a previous version is to restore a full backu
 
 **Upgrade**: 
 
+**Prerequisites and Important Warnings**:
+
+**1- Backup is mandatory**: Before doing anything, take a full backup of your data directory (sonatype-work/nexus3) and blob stores.
+
+**2- Java version check**: Nexus 3.x up to recent releases is compatible with Java 17; Java 21 will be required from 3.87 onwards, but for 3.86, Java 17 is sufficient. 
+Check with:
+```bash
+java -version
+```
+**3- Test environment first**: Always test in a staging/QA environment (a copy of prod) before upgrading production.
+
+**Step-by-Step Upgrade**: 
+
+**1. Full Backup**
+Stop the service (optional, but recommended before backup):
+```bash
+sudo systemctl stop nexus
+# OR: sudo /etc/init.d/nexus stop
+```
+Backup configuration and data
+If using an external DB (Postgres/MySQL), dump it as well.
+⚠️ Important: Do not proceed without a backup.
+
 
 ---
 
