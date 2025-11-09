@@ -60,7 +60,7 @@ A Repository Manager for storing, managing, and distributing software artifacts 
 ## ⚙️ Prerequisites
 
 - **OS**: RockyLinux10.0 or Ubuntu 24.04.3
-- **RAM**: Minimum 4GB 
+- **RAM**: Minimum 4 GB 
 - **CPU**: Minimum 4 Cores
 
 ---
