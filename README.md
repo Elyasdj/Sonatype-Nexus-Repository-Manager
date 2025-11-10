@@ -338,7 +338,7 @@ vim /opt/nexus/bin/nexus.vmoptions
 ```
 
 **Recommendations:**
-- Minimum: 4GB RAM + 4 CPU Cores
+- Minimum: 4 GB RAM + 4 CPU Cores
 - **Never allocate more than 50-60% of total server RAM to Nexus**
 
 ##### Disk Isolation
@@ -607,9 +607,26 @@ Admin Panel > System > Tasks > Create Task > Admin - Backup H2 Database
 
 ---
 
-## Upgrade & Downgrade
+## 🔄 Upgrade & Downgrade
 
-**Downgrade**: 
+<div align="left">
+
+### 📋 Overview
+
+</div>
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### ⚠️ **Downgrade**
+
+> **🚫 Not Supported by Sonatype**
+
+<details>
+<summary><b>Click to read important information</b></summary>
+
+<br>
 
 - As of the time I'm writing this readme, directly downgrading Sonatype Nexus Repository Manager is not supported by Sonatype. 
 
@@ -617,26 +634,60 @@ Admin Panel > System > Tasks > Create Task > Admin - Backup H2 Database
 
 - The only surefire way to revert to a previous version is to restore a full backup that you took before updating to newer version.
 
-**Upgrade**: 
+</details>
 
-**Prerequisites and Important Warnings**:
+</td>
+<td width="50%" valign="top">
 
-**1- Backup is mandatory**: Before doing anything, take a full backup of your data directory (sonatype-work/nexus3) and blob stores.
+### ✅ **Upgrade**
 
+> **🎯 Follow This Process**
 
-**2- Java version check**: Nexus 3.x up to recent releases is compatible with Java 17; Java 21 will be required from 3.87 onwards, but for 3.xx, Java 17 is sufficient. 
-Check with:
-```bash
-java -version
-```
+<details>
+<summary><b>Click to expand upgrade guide</b></summary>
 
-**3- Test environment first**: Always test in a staging/QA environment (a copy of prod) before upgrading production.
+<br>
 
+Jump to:
+- [Prerequisites](#prerequisites-and-important-warnings)
+- [Step-by-Step Guide](#step-by-step-upgrade)
+- [Best Practices](#additional-best-practices)
 
-**Step-by-Step Upgrade**: 
+</details>
 
+</td>
+</tr>
+</table>
 
-**1. Full Backup**
+---
+
+### 📌 Prerequisites and Important Warnings
+
+> #### ⚠️ **1- Backup is mandatory**
+> 
+> Before doing anything, take a full backup of your data directory (sonatype-work/nexus3) and blob stores.
+
+> #### ☕ **2- Java version check**
+> 
+> Nexus 3.x up to recent releases is compatible with Java 17; Java 21 will be required from 3.87 onwards, but for 3.xx, Java 17 is sufficient. 
+> 
+> Check with:
+> ```bash
+> java -version
+> ```
+
+> #### 🧪 **3- Test environment first**
+> 
+> Always test in a staging/QA environment (a copy of prod) before upgrading production.
+
+---
+### 📝 Step-by-Step Upgrade
+
+<details open>
+<summary><b>🔹 Step 1: Full Backup</b></summary>
+
+<br>
+
 - Stop the service (optional, but recommended before backup):
 ```bash
 sudo systemctl stop nexus
@@ -644,25 +695,41 @@ sudo systemctl stop nexus
 ```
 - Backup configuration and data
 - If using an external DB (Postgres/MySQL), dump it as well.
-⚠️ Important: Do not proceed without a backup.
+ 
+> ⚠️ **Important:** Do not proceed without a backup.
 
+</details>
 
-**2. Download Nexus 3.xx and Verify**
+<details>
+<summary><b>🔹 Step 2: Download Nexus 3.xx and Verify</b></summary>
+
+<br>
+
 - Download the official 3.xx version from Sonatype:
 ```bash
 wget https://download.sonatype.com/nexus/3/nexus-3.xx.0-xx-unix.tar.gz
 ```
 
+</details>
 
-**3. Verify Java and System Resources**
+<details>
+<summary><b>🔹 Step 3: Verify Java and System Resources</b></summary>
+
+<br>
+
 - Ensure Java 17 is installed and available in PATH:
 ```bash
 java -version
 ```
 - Make sure the server has enough memory/CPU/I/O for Nexus (depending on repo size).
 
+</details>
 
-**4. Stop Current Nexus**
+<details>
+<summary><b>🔹 Step 4: Stop Current Nexus</b></summary>
+
+<br>
+
 ```bash
 sudo systemctl stop nexus
 # OR: ./bin/nexus stop
@@ -672,23 +739,32 @@ sudo systemctl stop nexus
 ps aux | grep nexus
 ```
 
+</details>
 
-**5. Prepare New Installation**
+<details>
+<summary><b>🔹 Step 5: Prepare New Installation</b></summary>
 
-Two options:
+<br>
 
-- Option A (Recommended): Extract to a new directory (e.g., /opt/nexus-3.86) and point to existing data (sonatype-work).
+**Two options:**
 
-- Option B: Overwrite the existing installation (less safe).
+- **Option A (Recommended)**: Extract to a new directory (e.g., /opt/nexus-3.86) and point to existing data (sonatype-work).
 
-Example Option A:
+- **Option B**: Overwrite the existing installation (less safe).
+
+**Example Option A:**
 ```bash
 sudo tar -xzf nexus-3.xx.0-xx-unix.tar.gz -C /opt
 sudo mv /opt/nexus-3.xx.0-xx /opt/nexus-3.xx
 ```
 
+</details>
 
-**6. Update JVM / Karaf Configurations**
+<details>
+<summary><b>🔹 Step 6: Update JVM / Karaf Configurations</b></summary>
+
+<br>
+
 - Review nexus.vmoptions in the new installation. If you customized JVM options before (like -Dkaraf.data=... or -Djava.io.tmpdir=...), apply them in nexus-3.xx/bin/nexus.vmoptions:
 ```bash
 -Dkaraf.data=/opt/sonatype-work/nexus3
@@ -696,16 +772,26 @@ sudo mv /opt/nexus-3.xx.0-xx /opt/nexus-3.xx
 ```
 - If using systemd, update the unit file ExecStart to point to the new path.
 
+</details>
 
-**7. Set File Permissions**
+<details>
+<summary><b>🔹 Step 7: Set File Permissions</b></summary>
+
+<br>
+
 - Set ownership and permissions for Nexus user:
 ```bash
 sudo chown -R nexus:nexus /opt/nexus-3.86
 sudo chown -R nexus:nexus /opt/sonatype-work/nexus3
 ```
 
+</details>
 
-**8. Start New Nexus Version**
+<details>
+<summary><b>🔹 Step 8: Start New Nexus Version</b></summary>
+
+<br>
+
 Using Nexus user:
 ```bash
 sudo systemctl daemon-reload
@@ -713,16 +799,26 @@ sudo systemctl start nexus
 sudo systemctl status nexus
 ```
 
+</details>
 
-**9. Monitor Logs and Confirm Upgrade**
+<details>
+<summary><b>🔹 Step 9: Monitor Logs and Confirm Upgrade</b></summary>
+
+<br>
+
 Tail logs:
 ```bash
 tail -f /opt/sonatype-work/nexus3/log/nexus.log
 ```
 - On first startup, Nexus may rebuild indexes and perform migrations. Wait until complete and check for errors.
 
+</details>
 
-**10. Verify Functionality via UI / API**
+<details>
+<summary><b>🔹 Step 10: Verify Functionality via UI / API</b></summary>
+
+<br>
+
 - Open the Web UI (http://your-ip:8081) and log in.
 
 - Check repositories, blobstores, tasks, and health.
@@ -731,19 +827,33 @@ tail -f /opt/sonatype-work/nexus3/log/nexus.log
 
 - If using proxy, authentication, or LDAP/SSO, verify those too.
 
+</details>
 
-**11. Rollback (if needed)**
+<details>
+<summary><b>🔹 Step 11: Rollback (if needed)</b></summary>
+
+<br>
+
 - If serious issues occur, stop Nexus and restore from backup.
-⚠️ Downgrade is not supported; backup restore is the only rollback path.
 
-**Additional Best Practices**
-- Test in staging first.
+> ⚠️ **Downgrade is not supported;** backup restore is the only rollback path.
 
-- Always verify download SHA.
+</details>
 
-- If using HA/Cluster, follow Sonatype’s HA-specific instructions.
+---
 
-- On Windows service, check release notes for any known issues.
+### 🎯 Additional Best Practices
+
+<div align="left">
+
+| Practice | Description |
+|----------|-------------|
+| 🧪 **Test in staging first** | Always validate in non-production environment |
+| 🔐 **Verify download SHA** | Ensure file integrity before extraction |
+| 🔄 **HA/Cluster** | Follow Sonatype's HA-specific instructions |
+| 🪟 **Windows service** | Check release notes for any known issues |
+
+</div>
 
 ---
 
